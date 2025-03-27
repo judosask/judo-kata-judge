@@ -15,7 +15,7 @@ function getClient() {
     info('authenticating cosmos with key');
     return new CosmosClient({ endpoint, key });
   } else {
-    info('authenticating cosmos with creds');
+    info('authenticating cosmos with credentials');
     const aadCredentials = new DefaultAzureCredential();
     return new CosmosClient({ endpoint, aadCredentials });
   }

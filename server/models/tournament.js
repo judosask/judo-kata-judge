@@ -60,7 +60,7 @@ export default class Tournament {
       return await shimUpdate(KEY, id, changes, options);
     } catch (err) {
       if (err.code === 412) {
-        log(`attemped to update out of date tournament ${id} with etag ${options._etag}`);
+        log(`attempted to update out of date tournament ${id} with etag ${options._etag}`);
         throw new Error('tournament out of date, refresh and try again');
       } else {
         throw err;
