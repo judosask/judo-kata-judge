@@ -86,8 +86,11 @@ if (err.value) {
 async function add(data) {
   try {
     inAction.value = true;
-    console.log(data);
     const body = data;
+    if (org.value) {
+      // lock to org from cookie if set
+      body.org = org.value;
+    }
     const tournament = await $fetch(`/api/tournaments`, { method: 'POST', body, headers });
     tournaments.value.push(tournament);
     error.value = '';

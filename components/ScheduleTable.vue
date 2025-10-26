@@ -15,7 +15,6 @@
           <span v-else>{{ data.tori }} / {{ data.uke }}</span>
         </template>
       </PrimeColumn>
-      <!-- <PrimeColumn field="uke" header="Uke" /> -->
       <PrimeColumn field="startTime" header="Time" class="w-16">
         <template #body="{ data }">
           {{ data.startTime ? `${format(data.startTime, 'HH:mm')}` : '' }}

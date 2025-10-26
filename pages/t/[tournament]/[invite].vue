@@ -1,6 +1,10 @@
 <template>
   <Error :error-string="error" />
-  <AdminNav />
+  <PrimeMenubar :model="items" class="rounded-none border-0 fixed top-0 left-0 right-0 z-50 shadow-md">
+    <template #start>
+      <span class="pi pi-crown p-2 text-lg" />
+    </template>
+  </PrimeMenubar>
   <Container class="pt-16">
     <PrimeToolbar>
       <template #start>
@@ -14,8 +18,6 @@
         </div>
       </template>
       <template #end>
-        <PrimeButton icon="pi pi-copy" :label="$t('buttons.makeCopy')" :title="$t('buttons.makeCopy')"
-          @click.prevent="cloneTournament" class="mr-2" />
         <PrimeButton severity="danger" v-if="isReordering" :label="$t('buttons.cancel')" @click.prevent="cancel"
           :aria-label="$t('buttons.cancel')" class="mr-2" />
         <PrimeButton icon="pi pi-sort" :label="isReordering ? $t('buttons.save') : $t('buttons.reorder')"
@@ -98,13 +100,12 @@
     <GroupInput :group="groupToUpdate" @cancel="updateGroupVisible = false" @submit="updateGroup" />
   </PrimeDialog>
   <PrimeDialog v-model:visible="addMatchVisible" modal header="Add Match" class="w-full md:w-1/2 lg:w-1/3">
-    <MatchInput :athletes="athletes" @cancel="addMatchVisible = false" @submit="addMatch" />
+    <MatchInput @cancel="addMatchVisible = false" @submit="addMatch" />
   </PrimeDialog>
   <PrimeDialog v-model:visible="updateMatchVisible" modal header="Update Match" class="w-full md:w-1/2 lg:w-1/3">
-    <MatchInput :match="matchToUpdate" :athletes="athletes" @cancel="updateMatchVisible = false"
-      @submit="updateMatch" />
+    <MatchInput :match="matchToUpdate" @cancel="updateMatchVisible = false" @submit="updateMatch" />
   </PrimeDialog>
-  <PrimeDialog v-model:visible="inviteVisible" modal header="Links" class="w-full md:w-[14rem]">
+  <PrimeDialog v-model:visible="inviteVisible" modal header="Links" class="w-full md:w-1/3">
     <Invites :tournament :invites />
   </PrimeDialog>
 </template>
@@ -113,7 +114,6 @@
 import { getGroupName, handleServerError, shuffle } from '~/src/utils';
 
 const route = useRoute();
-const cookie = useCookie('jkj', { default: () => ({}) });
 const confirm = useConfirm();
 const { t } = useI18n();
 
@@ -134,7 +134,8 @@ const inviteVisible = ref(false);
 const expandedRows = ref({});
 
 const tournamentId = computed(() => route.params.tournament);
-const headers = computed(() => ({ authorization: `Bearer ${cookie.value.adminCode}` }));
+const inviteId = computed(() => route.params.invite);
+const headers = computed(() => ({ authorization: `Bearer ${inviteId.value}` }));
 
 const invites = computed(() => {
   if (adjustedTournament.value.invites) {
@@ -170,7 +171,7 @@ const adjustedTournament = computed(() => {
 const matMenuItems = computed(() => {
   return [{
     label: 'Mats',
-    items: adjustedTournament.value.mats.map((mat, index) => {
+    items: adjustedTournament.value.mats.map((_mat, index) => {
       return { label: `Move to Mat ${index + 1}`, command: () => moveGroup(matToEdit.value, groupToEdit.value, index) };
     }),
   }];
@@ -183,11 +184,6 @@ async function addMat() {
 
 async function showInvite() {
   inviteVisible.value = true;
-}
-
-async function cloneTournament() {
-  const response = await $fetch(`/api/tournaments/${tournamentId.value}/clone`, { headers: headers.value });
-  await navigateTo(`/admin/t/${response.id}`, { replace: true });
 }
 
 async function showDeleteMat(mat) {
@@ -338,12 +334,7 @@ const toggleMenu = (event, matIndex, groupIndex) => {
 }
 
 const { data: tournament, error: tError } = await useFetch(`/api/tournaments/${tournamentId.value}`, { headers: headers.value });
-watch(tError, (error) => {
-  error.value = handleServerError(err);
-});
-
-const { data: athletes, error: aError } = await useFetch(`/api/athletes`, { headers: headers.value });
-watch(aError, (error) => {
+watch(tError, (err) => {
   error.value = handleServerError(err);
 });
 

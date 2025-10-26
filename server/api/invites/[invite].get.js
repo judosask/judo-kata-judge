@@ -10,6 +10,6 @@ export default defineEventHandler(async (event) => {
     const tournament = await Invite.getTournament(id);
     return tournament.data;
   } catch (err) {
-    return createError({ statusCode: 400, message: err.message });
+    return createError({ statusCode: 400, statusMessage: err.message });
   }
 });

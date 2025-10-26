@@ -1,22 +1,15 @@
-import Tournament from '~/server/models/tournament';
-import { getToken, getAuth } from '~/server/utils';
+import { getToken, getInviteAuth } from '~/server/utils';
 
 export default defineEventHandler(async (event) => {
+  const tournamentId = getRouterParam(event, 'tournament');
   const token = getToken(event);
   if (!token) {
     return createError({ statusCode: 401, message: 'unauthorized' });
   }
-  if (!getAuth(token)) {
-    return createError({ statusCode: 403, message: 'forbidden' });
-  }
   try {
-    const tournamentId = getRouterParam(event, 'tournament');
-    if (!tournamentId) {
-      return createError({ statusCode: 404, message: 'Tournament not found' });
-    }
-    const tournament = await Tournament.get(tournamentId);
-    if (!tournament) {
-      return createError({ statusCode: 404, message: 'Tournament not found' });
+    const { tournament, error } = await getInviteAuth(token, tournamentId);
+    if (error) {
+      return error;
     }
     return tournament.data;
   } catch (err) {

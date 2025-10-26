@@ -30,9 +30,9 @@ const prop = defineProps(['tournament', 'org']);
 const emit = defineEmits(['submit', 'cancel']);
 
 const initialValues = reactive({
-  name: prop.tournament && prop.tournament.name || '',
-  org: prop.org || prop.tournament && prop.tournament.org || 'jc',
-  showJudgeTotals: prop.tournament && prop.tournament.showJudgeTotals || false,
+  name: (prop.tournament && prop.tournament.name) || '',
+  org: (prop.tournament && prop.tournament.org) || 'jc',
+  showJudgeTotals: (prop.tournament && prop.tournament.showJudgeTotals) || false,
 });
 
 const resolver = ({ values }) => {
@@ -51,7 +51,6 @@ const resolver = ({ values }) => {
 
 const onSubmit = ({ valid, values }) => {
   if (valid) {
-    values.org = prop.org;
     emit('submit', values);
   }
 };

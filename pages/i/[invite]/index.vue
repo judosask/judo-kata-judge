@@ -1,5 +1,5 @@
 <template>
-  <Error :error-string="error" />
+  <PrimeMessage v-if="errorString" severity="error" class="fixed top-5 left-5 right-5">{{ errorString }}</PrimeMessage>
   <UserNav :tournament="tournament" />
   <PublicContainer>
     <PrimeDataView :value="items">
@@ -8,34 +8,15 @@
           :class="{ 'border-t border-surface-200 dark:border-surface-700': index !== 0 }">
           {{ getTitle(item) }}
           <div class="flex gap-2">
-            <!-- <NuxtLink :to="getUrl(item)" target="_blank"> -->
             <PrimeButton as="a" icon="pi pi-external-link" :title="$t('public.button.open')" :href="getUrl(item)"
               target="_blank" rel="noopener"></PrimeButton>
-            <!-- </NuxtLink> -->
-            <!-- <NuxtLink v-if="item.v2" :to="getUrlv2(item)" target="_blank"> -->
             <PrimeButton v-if="item.v2" as="a" icon="pi pi-external-link" label="V2" :title="$t('public.button.open')"
               :href="getUrlv2(item)" target="_blank" rel="noopener">
             </PrimeButton>
-            <!-- </NuxtLink> -->
             <PrimeButton icon="pi pi-qrcode" :title="$t('public.button.qr')" @click.prevent="showQr($event, item)" />
           </div>
         </div>
       </template>
-      <!-- <PrimeColumn field="title">
-        <template #body="{ data }">
-          {{ getTitle(data) }}
-        </template>
-      </PrimeColumn>
-      <PrimeColumn frozen align-frozen="right" class="w-20" field="mat" :header="$t('labels.actions')">
-        <template #body="{ data }">
-          <div class="flex gap-2">
-            <NuxtLink :to="getUrl(data)" target="_blank">
-              <PrimeButton icon="pi pi-external-link" :title="$t('public.button.open')"></PrimeButton>
-            </NuxtLink>
-            <PrimeButton icon="pi pi-qrcode" :title="$t('public.button.qr')" @click.prevent="showQr($event, data)" />
-          </div>
-        </template>
-      </PrimeColumn> -->
     </PrimeDataView>
     <PrimeOverlayPanel ref="op">
       <img :src="qr" :alt="qrString" class="w-36 max-w-4xl join-item" />
@@ -46,6 +27,7 @@
 <script setup>
 definePageMeta({
   colorMode: 'corporate',
+  template: 'public',
 });
 
 import { handleServerError } from '~/src/utils';
@@ -53,20 +35,26 @@ import { useQRCode } from '@vueuse/integrations/useQRCode';
 
 const route = useRoute();
 const invite = computed(() => route.params.invite);
-const resultsPath = computed(() => `/i/${invite.value}/results`);
 const items = computed(() => {
-  const items = [{ title: 'results' }];
-  return items.concat(tournament.value.mats.map((mat, index) => _generateMatItems(mat, index)).flat());
+  if (tournament.value.mats) {
+    const items = [{ title: 'results' }];
+    return items.concat(tournament.value.mats.map((mat, index) => _generateMatItems(mat, index)).flat());
+  }
 });
-const error = ref('');
+const errorString = ref('');
 const qrString = ref();
 const qr = useQRCode(qrString);
 const op = ref();
 
-const { data: tournament, error: err } = await useFetch(`/api/invites/${invite.value}`);
-if (err.value) {
-  error.value = handleServerError(err);
-}
+const { data: tournament, error } = await useFetch(`/api/invites/${invite.value}`);
+watch(error, (error) => {
+  if (error) {
+    errorString.value = handleServerError(error);
+    tournament.value = {};
+  } else {
+    errorString.value = '';
+  }
+}, { immediate: true });
 
 useHead({
   title: tournament.value.name,

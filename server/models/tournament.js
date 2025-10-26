@@ -42,7 +42,7 @@ export default class Tournament {
     this.#etag = etag;
   }
 
-  static async create({ name = 'Tournament 1', org, showJudgeTotals = true }) {
+  static async create({ name = 'Tournament 1', org, showJudgeTotals = true, invites = {} }) {
     const id = nanoid(6);
     const tournament = {
       id,
@@ -50,7 +50,7 @@ export default class Tournament {
       org,
       showJudgeTotals,
       mats: [],
-      invites: {},
+      invites,
     };
     return await shimCreate(KEY, tournament);
   }

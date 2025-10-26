@@ -22,7 +22,7 @@
               <div>{{ match ? getGroupName(group) : '' }}</div>
             </div>
             <div class="font-bold" v-if="match && group">
-              {{ judge.name }} (Shadow)
+              {{ judge.name }}
             </div>
           </div>
         </template>

@@ -1,24 +1,20 @@
 import Tournament from '~/server/models/tournament';
-import { getAuth, getToken } from '~/server/utils';
+import { getInviteAuth, getToken } from '~/server/utils';
 
 export default defineEventHandler(async (event) => {
   const token = getToken(event);
   if (!token) {
     return createError({ statusCode: 401, message: 'unauthorized' });
   }
-  if (!getAuth(token)) {
-    return createError({ statusCode: 403, message: 'forbidden' });
-  }
-
   const tournamentId = getRouterParam(event, 'tournament');
-  if (!tournamentId) {
-    return createError({ statusCode: 404, message: 'Tournament not found' });
+  const { tournament, error } = await getInviteAuth(token, tournamentId);
+  if (error) {
+    return error;
   }
   const { name, org, showJudgeTotals, mats, _etag } = await readBody(event);
   if (!_etag) {
     return createError({ statusCode: 400, message: 'Invalid update data' });
   }
-
   try {
     return await Tournament.update(tournamentId, { name, org, showJudgeTotals, mats }, { _etag });
   } catch (err) {

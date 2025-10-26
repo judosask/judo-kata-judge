@@ -3,6 +3,7 @@ import { omit, pick } from 'lodash-es';
 import { moveList, calculateHasMajor, calculateMoveScore } from '~/src/utils';
 import Match from './models/match';
 import Invite from './models/invite';
+import Tournament from './models/tournament';
 
 export const nanoid = customAlphabet('ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789');
 
@@ -47,6 +48,36 @@ export function getAuth(key) {
       return context;
     }
   }
+}
+
+function _getError(context) {
+  // return 404 on passcode auth, otherwise don't reveal the tournament
+  if (context) {
+    return createError({ statusCode: 404, message: 'Tournament not found' });
+  } {
+    return createError({ statusCode: 401, message: 'unauthorized' });
+  }
+}
+
+export async function getInviteAuth(token, tournamentId) {
+  // if context exist then it is a passcode auth, otherwise check if it's admin invite auth
+  const context = getAuth(token);
+  if (!tournamentId) {
+    return { error: _getError(context) };
+  }
+  const tournament = await Tournament.get(tournamentId);
+  if (!tournament) {
+    return { error: _getError(context) };
+  }
+  const inviteAuth = Object.keys(tournament.data.invites || {}).some((key) => {
+    if (key.includes(token)) {
+      return tournament.data.invites[key].use === 'admin';
+    }
+  });
+  if (!inviteAuth && !context) {
+    return { error: createError({ statusCode: 401, message: 'unauthorized' }) };
+  }
+  return { tournament };
 }
 
 export function objectToEventString(object) {
